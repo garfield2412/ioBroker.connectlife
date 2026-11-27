@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "connectlife",
-    "version": "0.3.1",
+    "version": "0.4.0",
     "news": {
+      "0.4.0": {
+        "en": "Add read-only dryer profiles, observed program and time mappings, stale-data indication and consistent fork version metadata.",
+        "de": "Lesbare Trocknerprofile, beobachtete Programm- und Zeitzuordnungen, Anzeige veralteter Daten und konsistente Fork-Versionsmetadaten ergänzt.",
+        "ru": "Добавлены профили сушильных машин только для чтения, программы и время, индикатор устаревших данных и согласованные метаданные версии форка.",
+        "pt": "Adicionados perfis de secadoras só de leitura, programas e tempos, indicação de dados desatualizados e metadados de versão consistentes.",
+        "nl": "Alleen-lezen drogerprofielen, programma- en tijdwaarden, verouderde-data-indicatie en consistente versiegegevens toegevoegd.",
+        "fr": "Ajout de profils de sèche-linge en lecture seule, programmes et durées, indication de données périmées et métadonnées de version cohérentes.",
+        "it": "Aggiunti profili asciugatrice in sola lettura, programmi e tempi, indicatore di dati obsoleti e metadati di versione coerenti.",
+        "es": "Añadidos perfiles de secadora de solo lectura, programas y tiempos, indicador de datos obsoletos y metadatos de versión coherentes.",
+        "pl": "Dodano profile suszarek tylko do odczytu, programy i czasy, wskaźnik nieaktualnych danych oraz spójne metadane wersji.",
+        "uk": "Додано профілі сушильних машин лише для читання, програми й час, індикатор застарілих даних і узгоджені метадані версії.",
+        "zh-cn": "新增只读烘干机配置、程序和时间映射、数据过期指示及一致的版本元数据。"
+      },
       "0.3.1": {
         "en": "Fixed CI formatting, aligned check and deploy jobs with Node.js 24, and completed repository metadata while retaining Node.js 22 runtime support.",
         "de": "CI-Formatierung korrigiert, Prüf- und Deploy-Jobs auf Node.js 24 ausgerichtet und Repository-Metadaten vervollständigt; Node.js 22 bleibt unterstützt.",
@@ -126,8 +139,8 @@
     "platform": "Javascript/Node.js",
     "icon": "connectlife.svg",
     "enabled": true,
-    "extIcon": "https://raw.githubusercontent.com/Andiweli/ioBroker.connectlife/main/admin/connectlife.svg",
-    "readme": "https://github.com/Andiweli/ioBroker.connectlife/blob/main/README.md",
+    "extIcon": "https://raw.githubusercontent.com/garfield2412/ioBroker.connectlife/main/admin/connectlife.svg",
+    "readme": "https://github.com/garfield2412/ioBroker.connectlife/blob/main/README.md",
     "loglevel": "info",
     "tier": 3,
     "mode": "daemon",
@@ -167,6 +180,19 @@
   ],
   "objects": [],
   "instanceObjects": [
+    {
+      "_id": "info.dataStale",
+      "type": "state",
+      "common": {
+        "name": "Cloud data is stale",
+        "type": "boolean",
+        "role": "indicator",
+        "read": true,
+        "write": false,
+        "def": true
+      },
+      "native": {}
+    },
     {
       "_id": "info",
       "type": "channel",

@@ -1,13 +1,13 @@
 {
   "name": "iobroker.connectlife",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Unofficial ioBroker adapter for ConnectLife Cloud appliances",
   "author": {
     "name": "Andreas Stürmer",
     "url": "https://github.com/Andiweli"
   },
   "contributors": [],
-  "homepage": "https://github.com/Andiweli/ioBroker.connectlife",
+  "homepage": "https://github.com/garfield2412/ioBroker.connectlife",
   "license": "MIT",
   "keywords": [
     "ioBroker",
@@ -22,10 +22,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Andiweli/ioBroker.connectlife.git"
+    "url": "https://github.com/garfield2412/ioBroker.connectlife.git"
   },
   "bugs": {
-    "url": "https://github.com/Andiweli/ioBroker.connectlife/issues"
+    "url": "https://github.com/garfield2412/ioBroker.connectlife/issues"
   },
   "engines": {
     "node": ">=22"
@@ -54,7 +54,7 @@
     "main.js"
   ],
   "scripts": {
-    "test:syntax": "node --check main.js && node --check lib/connectlife-client.js && node --check lib/connectlife-client-v011.js",
+    "test:syntax": "node --check main.js && node --check lib/connectlife-client.js && node --check lib/connectlife-client-v011.js && node --check lib/device-profiles.js && node --check lib/climate-profile.js",
     "test:js": "mocha \"{!(node_modules|test)/**/*.test.js,*.test.js,test/**/test!(PackageFiles|Startup).js}\"",
     "test:unit": "npm run test:js",
     "test:package": "mocha test/package --exit",

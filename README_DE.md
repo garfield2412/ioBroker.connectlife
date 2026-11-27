@@ -4,6 +4,26 @@
 
 [English documentation](README.md)
 
+Vorbereitete Fork-Version: **0.4.0**. Ursprungsprojekt: [Andiweli/ioBroker.connectlife](https://github.com/Andiweli/ioBroker.connectlife).
+
+Eine GitHub-Installation allein bietet keine automatische Suche nach neuen Fork-Versionen.
+Für reguläre Update-Angebote im Admin ist ein aktiver Repository-Katalog mit einer passenden
+Installationsquelle erforderlich. Bis zur Veröffentlichung aktualisieren wir den Fork über
+die eigene GitHub-URL. Details stehen in der [Update-Anleitung](docs/updates.md).
+
+## Lokaler Entwicklungsstand: Trockner
+
+Zusätzlich zur bisherigen Klimaintegration gibt es eine modulare, lesende Trocknerauswertung.
+Bestätigt ist bisher Typ `030` mit Feature `1wk080218v0w`: Betriebszustand, Programm,
+Restzeit, Gesamtdauer, Extra trocken bei Baumwolle, Trommellicht und Fehlercode.
+Andere Trocknerfamilien (`004`, `030`, `032`) behalten Metadaten und Raw-Daten ohne
+ungeprüfte Zuordnungen. Neue Profilangaben stehen unter `devices.<id>.info`, die
+lesbaren Werte unter `status`. Trocknersteuerung und Raw-Schreiben für Trockner sind gesperrt.
+
+`info.dataStale` kennzeichnet fehlgeschlagene oder zu lange zurückliegende Kontoabrufe.
+Ein erfolgreicher Abruf garantiert keine neue Messung eines offline gemeldeten Geräts.
+Details und Erweiterung weiterer Profile: [Geräteprofile](docs/device-profiles.md).
+
 > [!NOTE]
 > Experimenteller, inoffizieller ioBroker-Adapter für die ConnectLife-Cloud. Getestet wurde er mit Hisense-Klimageräten.
 > Konten, die ausschließlich über Google, Apple oder Microsoft angelegt wurden, werden derzeit nicht unterstützt. Der Adapter benötigt eine ConnectLife-E-Mail-Adresse und ein ConnectLife-Passwort.
@@ -38,7 +58,7 @@ Im ioBroker-Admin den Expertenmodus aktivieren und **Adapter aus eigener URL ins
 GitHub-Adresse:
 
 ```text
-https://github.com/Andiweli/ioBroker.connectlife
+https://github.com/garfield2412/ioBroker.connectlife
 ```
 
 Danach die Instanz öffnen und die ConnectLife-E-Mail-Adresse sowie das Passwort eintragen.
@@ -78,7 +98,7 @@ connectlife.0
 
 Die verwendete ConnectLife-Schnittstelle ist nicht offiziell dokumentiert. Sie wurde aus der ConnectLife-App rekonstruiert. Endpunkte, Schlüssel, Eigenschaften oder der Login können sich jederzeit ändern.
 
-Dieser Adapter wurde KI-unterstützt entwickelt und ist erhältlich unter https://github.com/Andiweli/ioBroker.connectlife
+Dieser Adapter wurde KI-unterstützt entwickelt und ist erhältlich unter https://github.com/garfield2412/ioBroker.connectlife
 
 Basiert auf Teilen von https://github.com/Bilan/connectlife-api-connector
 
@@ -88,6 +108,13 @@ Basiert auf Teilen von https://github.com/Bilan/connectlife-api-connector
 - Veröffentlichung im offiziellen ioBroker-Adapter-Repository
 
 ## Changelog
+
+### 0.4.0 (2026-11-27)
+
+- Modulare, lesbare Trocknerprofile mit sicherem Raw-Fallback für weitere Gerätefamilien ergänzt.
+- Beobachtete Betriebszustände, Programme Eco/Baumwolle, Zeitwerte und Extra trocken bei Baumwolle zugeordnet.
+- Veraltete Cloud-Daten sichtbar gemacht und fehlende Eigenschaften sowie bestehende Klimafunktionen getestet.
+- Fork-Metadaten auf garfield2412 umgestellt und GitHub-Updates sowie Grenzen automatischer Update-Angebote dokumentiert.
 
 ### 0.3.1 (2026-08-06)
 

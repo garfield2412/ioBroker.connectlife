@@ -2,12 +2,21 @@
 
 # ConnectLife Cloud for ioBroker
 
-![Version](https://img.shields.io/github/package-json/v/Andiweli/ioBroker.connectlife?label=version)
+![Version](https://img.shields.io/github/package-json/v/garfield2412/ioBroker.connectlife/main?label=version)
 ![AI Assisted Coding](https://img.shields.io/badge/AI-Assisted%20Coding-white)
-[![Support via PayPal](https://img.shields.io/badge/Support%20via-PayPal-0070BA?logo=paypal\&logoColor=white)](https://paypal.me/andiweli)
+
 
 
 [Deutsche Dokumentation](README_DE.md)
+
+Prepared fork version: **0.4.0**. Original project: [Andiweli/ioBroker.connectlife](https://github.com/Andiweli/ioBroker.connectlife).
+
+Local development adds read-only dryer profiles alongside the existing climate integration.
+Type `030` / feature `1wk080218v0w` has observed operating state, program, time,
+Cotton extra-dry option, drum light and error-code mappings. Other dryer features
+retain raw data without guessed mappings. Dryer writes are blocked.
+`info.dataStale` marks failed or overdue account polls; offline devices may still have cached data.
+See the [German profile documentation](docs/device-profiles.md) for scope and limitations.
 
 > [!NOTE]
 > Experimental, unofficial ioBroker adapter for the ConnectLife Cloud. It has been tested with Hisense air conditioners. Manufacturer information is available on the [Hisense website](https://global.hisense.com/).
@@ -51,7 +60,7 @@ Enable expert mode in the ioBroker Admin interface and select **Install adapter 
 GitHub URL:
 
 ```text
-https://github.com/Andiweli/ioBroker.connectlife
+https://github.com/garfield2412/ioBroker.connectlife
 ```
 
 Open the created instance and enter the ConnectLife email address and password.
@@ -91,7 +100,7 @@ connectlife.0
 
 The ConnectLife interface used by this adapter is unofficial and reverse-engineered. Endpoints, keys, properties or the login flow may change without notice.
 
-This adapter was developed with AI assistance and is available at https://github.com/Andiweli/ioBroker.connectlife
+This adapter was developed with AI assistance and is available at https://github.com/garfield2412/ioBroker.connectlife
 
 Based in part on https://github.com/Bilan/connectlife-api-connector
 
@@ -101,6 +110,13 @@ Based in part on https://github.com/Bilan/connectlife-api-connector
 - Publication in the official ioBroker adapter repository
 
 ## Changelog
+
+### 0.4.0 (2026-11-27)
+
+- Added modular, read-only dryer profiles and a safe raw-data fallback for other dryer families.
+- Added observed operating states, Cotton/Eco programs, time values and the Cotton extra-dry option.
+- Added stale-data indication and tests for missing properties and unchanged climate controls.
+- Pointed fork metadata to garfield2412 and documented GitHub updates and the limits of automatic update detection. See [update setup](docs/updates.md).
 
 ### 0.3.1 (2026-08-06)
 

@@ -2,6 +2,8 @@
 
 const utils = require("@iobroker/adapter-core");
 const { ConnectLifeClient } = require("./lib/connectlife-client-v011");
+const { selectProfile, mapDryerStates } = require("./lib/device-profiles");
+const { createClimateStates } = require("./lib/climate-profile");
 
 const INITIAL_REFRESH_RETRY_MS = 5000;
 
@@ -22,6 +24,8 @@ class ConnectLifeAdapter extends utils.Adapter {
         this.hadSuccessfulConnection = false;
         this.initialRefreshRetryAvailable = true;
         this.unloading = false;
+        this.freshnessTimer = null;
+        this.readOnlyDeviceIds = new Set();
 
         this.on("ready", this.onReady.bind(this));
         this.on("stateChange", this.onStateChange.bind(this));
@@ -36,6 +40,7 @@ class ConnectLifeAdapter extends utils.Adapter {
             await this.setStateAsync("info.connection", false, true);
             await this.setStateAsync("info.lastError", "", true);
             await this.setStateAsync("info.nextRetry", "", true);
+            await this.setReadOnlyState("info.dataStale", true, "Cloud data is stale", "boolean", "indicator");
 
             if (!this.config.login || !this.config.password) {
                 const message = "ConnectLife Cloud login and password are required.";
@@ -117,6 +122,7 @@ class ConnectLifeAdapter extends utils.Adapter {
 
             await this.setStateAsync("info.connection", true, true);
             await this.setStateAsync("info.lastUpdate", updatedAt, true);
+            await this.updateFreshness(true);
             await this.setStateAsync("info.lastError", "", true);
             await this.setStateAsync("info.nextRetry", "", true);
 
@@ -158,6 +164,8 @@ class ConnectLifeAdapter extends utils.Adapter {
             this.log.debug(`Updated ${devices.length} ConnectLife Cloud device(s).`);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
+
+            await this.updateFreshness(false);
 
             if (this.isRateLimitError(error)) {
                 this.initialRefreshRetryAvailable = false;
@@ -224,6 +232,12 @@ class ConnectLifeAdapter extends utils.Adapter {
         }
 
         const objectId = this.sanitizeId(puid);
+        const profile = selectProfile(device);
+        if (profile.category !== "climate") {
+            this.readOnlyDeviceIds.add(objectId);
+        } else {
+            this.readOnlyDeviceIds.delete(objectId);
+        }
         const displayName = this.getDeviceDisplayName(device, puid);
         const deviceNickName = this.firstNonEmpty(device.deviceNickName);
         const roomName = this.firstNonEmpty(device.roomName);
@@ -250,6 +264,14 @@ class ConnectLifeAdapter extends utils.Adapter {
         await this.ensureChannel(`devices.${objectId}.status`, "Status");
         await this.ensureChannel(`devices.${objectId}.controls`, "Controls");
         await this.ensureChannel(`devices.${objectId}.raw`, "Raw properties");
+        await this.setReadOnlyState(`devices.${objectId}.info.profile`, profile.id, "Device profile", "string", "text");
+        await this.setReadOnlyState(
+            `devices.${objectId}.info.category`,
+            profile.category,
+            "Device category",
+            "string",
+            "info.type",
+        );
 
         await this.setReadOnlyState(`devices.${objectId}.info.puid`, puid, "Device ID", "string", "info.serial");
         await this.setReadOnlyState(
@@ -291,7 +313,10 @@ class ConnectLifeAdapter extends utils.Adapter {
 
         const status = device.statusList && typeof device.statusList === "object" ? device.statusList : {};
 
-        await this.createFriendlyClimateStates(objectId, status);
+        if (profile.category === "climate") {
+            await createClimateStates(this, objectId, status);
+        }
+        await this.createProfileStates(objectId, mapDryerStates(profile, status));
 
         if (this.config.createRawStates !== false) {
             for (const [property, value] of Object.entries(status)) {
@@ -308,126 +333,6 @@ class ConnectLifeAdapter extends utils.Adapter {
         );
     }
 
-    async createFriendlyClimateStates(objectId, status) {
-        const definitions = {
-            t_power: {
-                id: "power",
-                name: "Power",
-                type: "boolean",
-                role: "switch.power",
-                toState: value => Number(value) !== 0,
-            },
-            t_temp: {
-                id: "targetTemperature",
-                name: "Target temperature",
-                type: "number",
-                role: "level.temperature",
-                unit: "°C",
-                min: 10,
-                max: 35,
-                toState: Number,
-            },
-            t_work_mode: {
-                id: "mode",
-                name: "Operating mode",
-                type: "number",
-                role: "level.mode.airconditioner",
-                states: {
-                    0: "fan",
-                    1: "heat",
-                    2: "cool",
-                    3: "dry",
-                    4: "auto",
-                },
-                toState: Number,
-            },
-            t_fan_speed: {
-                id: "fanSpeed",
-                name: "Fan speed",
-                type: "number",
-                role: "level.mode.fan",
-                states: {
-                    0: "auto",
-                    5: "super low",
-                    6: "low",
-                    7: "medium",
-                    8: "high",
-                    9: "super high",
-                },
-                toState: Number,
-            },
-            t_fan_mute: {
-                id: "silent",
-                name: "Silent mode",
-                type: "boolean",
-                role: "switch.mode.silent",
-                toState: value => Number(value) !== 0,
-            },
-            t_super: {
-                id: "turbo",
-                name: "Turbo mode",
-                type: "boolean",
-                role: "switch.mode.boost",
-                toState: value => Number(value) !== 0,
-            },
-            t_eco: {
-                id: "eco",
-                name: "Eco mode",
-                type: "boolean",
-                role: "switch.mode.eco",
-                toState: value => Number(value) !== 0,
-            },
-            t_swing_direction: {
-                id: "horizontalSwing",
-                name: "Horizontal swing",
-                type: "number",
-                role: "level.mode.swing",
-                states: {
-                    0: "straight",
-                    1: "right",
-                    2: "both sides",
-                    3: "swing",
-                    4: "left",
-                },
-                toState: Number,
-            },
-            t_swing_angle: {
-                id: "verticalSwing",
-                name: "Vertical swing",
-                type: "number",
-                role: "level.mode.swing",
-                toState: Number,
-            },
-        };
-
-        for (const [apiProperty, definition] of Object.entries(definitions)) {
-            if (!(apiProperty in status)) {
-                continue;
-            }
-
-            const stateId = `devices.${objectId}.controls.${definition.id}`;
-            await this.extendObjectAsync(stateId, {
-                type: "state",
-                common: {
-                    name: definition.name,
-                    type: definition.type,
-                    role: definition.role,
-                    read: true,
-                    write: true,
-                    ...(definition.unit ? { unit: definition.unit } : {}),
-                    ...(definition.min !== undefined ? { min: definition.min } : {}),
-                    ...(definition.max !== undefined ? { max: definition.max } : {}),
-                    ...(definition.states ? { states: definition.states } : {}),
-                },
-                native: {
-                    apiProperty,
-                    deviceObjectId: objectId,
-                },
-            });
-            await this.setStateAsync(stateId, definition.toState(status[apiProperty]), true);
-        }
-    }
-
     async createRawState(objectId, property, value) {
         const safeProperty = this.sanitizeId(property);
         const stateId = `devices.${objectId}.raw.${safeProperty}`;
@@ -441,7 +346,7 @@ class ConnectLifeAdapter extends utils.Adapter {
                 type,
                 role: "state",
                 read: true,
-                write: this.config.allowRawWrites === true,
+                write: this.config.allowRawWrites === true && !this.readOnlyDeviceIds.has(objectId),
             },
             native: {
                 apiProperty: property,
@@ -461,6 +366,15 @@ class ConnectLifeAdapter extends utils.Adapter {
             const object = await this.getObjectAsync(relativeId);
             const apiProperty = object?.native?.apiProperty;
             const deviceObjectId = object?.native?.deviceObjectId;
+
+            if (this.readOnlyDeviceIds.has(deviceObjectId)) {
+                this.log.warn("This device profile supports monitoring only.");
+                return;
+            }
+
+            if (object?.common?.write !== true) {
+                return;
+            }
 
             if (!apiProperty || !deviceObjectId) {
                 this.log.warn(`Cannot map writable state ${id} to a ConnectLife Cloud property.`);
@@ -565,6 +479,60 @@ class ConnectLifeAdapter extends utils.Adapter {
         }
     }
 
+    async updateFreshness(success) {
+        if (this.freshnessTimer) {
+            this.clearTimeout(this.freshnessTimer);
+            this.freshnessTimer = null;
+        }
+        await this.setStateAsync("info.dataStale", !success, true);
+        if (success && !this.unloading) {
+            const maximumAge = Math.max(30, Number(this.config.pollInterval) || 60) * 2000 + 30000;
+            this.freshnessTimer = this.setTimeout(async () => {
+                this.freshnessTimer = null;
+                try {
+                    await this.setStateAsync("info.dataStale", true, true);
+                } catch (error) {
+                    this.log.warn(`Could not update data freshness: ${error.message}`);
+                }
+            }, maximumAge);
+        }
+    }
+
+    async createProfileStates(objectId, definitions) {
+        const currentIds = new Set();
+        for (const definition of definitions) {
+            const id = `devices.${objectId}.status.${definition.id}`;
+            currentIds.add(id);
+            await this.extendObjectAsync(id, {
+                type: "state",
+                common: {
+                    name: definition.name,
+                    type: definition.type,
+                    role: definition.role,
+                    read: true,
+                    write: false,
+                    ...(definition.states ? { states: definition.states } : {}),
+                    ...(definition.unit ? { unit: definition.unit } : {}),
+                    ...(definition.min !== undefined ? { min: definition.min } : {}),
+                },
+                native: { sourceProperty: definition.property, profileState: true },
+            });
+            await this.setStateAsync(id, { val: definition.value, ack: true, q: definition.value === null ? 1 : 0 });
+        }
+        // Include persisted states after restarts: omitted properties must not retain valid old values.
+        const existing = await this.getStatesAsync(`devices.${objectId}.status.*`);
+        for (const id of Object.keys(existing)) {
+            const relativeId = id.startsWith(`${this.namespace}.`) ? id.slice(this.namespace.length + 1) : id;
+            if (currentIds.has(relativeId)) {
+                continue;
+            }
+            const object = await this.getObjectAsync(relativeId);
+            if (object?.native?.profileState === true) {
+                await this.setStateAsync(relativeId, { val: null, ack: true, q: 1 });
+            }
+        }
+    }
+
     async ensureChannel(id, name) {
         await this.extendObjectAsync(id, {
             type: "channel",
@@ -646,6 +614,10 @@ class ConnectLifeAdapter extends utils.Adapter {
         this.unloading = true;
 
         try {
+            if (this.freshnessTimer) {
+                this.clearTimeout(this.freshnessTimer);
+                this.freshnessTimer = null;
+            }
             if (this.pollTimer) {
                 this.clearTimeout(this.pollTimer);
                 this.pollTimer = null;
