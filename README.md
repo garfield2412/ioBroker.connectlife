@@ -11,6 +11,10 @@
 
 Prepared fork version: **0.4.1**. Original project: [Andiweli/ioBroker.connectlife](https://github.com/Andiweli/ioBroker.connectlife).
 
+Development builds currently retain base version 0.4.1. `info.build` identifies the
+installed revision separately (for example `0.4.1 · 83f314a`); `info.buildCommit` contains
+the full commit. Unverifiable builds show `unknown`. This does not enable automatic updates.
+
 Local development adds read-only dryer profiles alongside the existing climate integration.
 Type `030` / feature `1wk080218v0w` has observed operating state, program, time,
 Cotton extra-dry option, drum light and error-code mappings. Other dryer features
@@ -117,6 +121,8 @@ Based in part on https://github.com/Bilan/connectlife-api-connector
 ## Changelog
 
 ### 0.4.1 (2026-11-27)
+
+- Added separate installed-build identification from local Git or installation metadata without changing the base version.
 
 - Added explicit diagnostic reads for property descriptions, static data and self-check reports.
 - Reused the existing session with bounded token/nonce retries, caching and rate-limit cooldown.

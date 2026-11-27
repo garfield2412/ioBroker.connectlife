@@ -1,6 +1,6 @@
 # Lesende Cloud-Diagnose
 
-Lokaler Entwicklungsstand 0.4.1. Noch nicht installiert oder auf GitHub bereitgestellt. Keine Gerätebefehle oder Push-Registrierungen. Die Funktion läuft nur nach ausdrücklicher Auslösung.
+Diagnosefunktion mit Basisversion 0.4.1, auf dem Entwicklungsbranch bereitgestellt. Die nachfolgende Build-Anzeige ist noch eine lokale Erweiterung. Keine Gerätebefehle oder Push-Registrierungen. Die Funktion läuft nur nach ausdrücklicher Auslösung.
 
 ## Auslösen und auslesen
 

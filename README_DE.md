@@ -6,6 +6,11 @@
 
 Vorbereitete Fork-Version: **0.4.1**. Ursprungsprojekt: [Andiweli/ioBroker.connectlife](https://github.com/Andiweli/ioBroker.connectlife).
 
+Weitere Entwicklungsstände behalten vorerst die Basisversion 0.4.1. Der installierte Stand
+steht getrennt unter `info.build`, beispielsweise `0.4.1 · 83f314a`; der vollständige Hash
+steht unter `info.buildCommit`. Ohne verlässlichen lokalen Nachweis wird `unknown` angezeigt.
+Die Build-Kennung erzeugt kein automatisches ioBroker-Updateangebot.
+
 Eine GitHub-Installation allein bietet keine automatische Suche nach neuen Fork-Versionen.
 Für reguläre Update-Angebote im Admin ist ein aktiver Repository-Katalog mit einer passenden
 Installationsquelle erforderlich. Bis zur Veröffentlichung aktualisieren wir den Fork über
@@ -115,6 +120,8 @@ Basiert auf Teilen von https://github.com/Bilan/connectlife-api-connector
 ## Changelog
 
 ### 0.4.1 (2026-11-27)
+
+- Build-Kennung aus lokalem Git oder Installationsmetadaten ergänzt; Basisversion bleibt unverändert.
 
 - Manuellen Diagnoseabruf für Eigenschaftslisten, Gerätemetadaten und Selbstdiagnose ergänzt.
 - Bestehende Sitzung, begrenzte Token-/Nonce-Wiederholungen, Cache und Rate-Limit-Pause verwendet.

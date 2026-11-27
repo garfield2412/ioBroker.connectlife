@@ -5,6 +5,7 @@ const { ConnectLifeClient } = require("./lib/connectlife-client-v011");
 const { selectProfile, mapDryerStates } = require("./lib/device-profiles");
 const { createClimateStates } = require("./lib/climate-profile");
 const { DiagnosticsCollector } = require("./lib/diagnostics");
+const { getBuildInfo } = require("./lib/build-info");
 
 const INITIAL_REFRESH_RETRY_MS = 5000;
 
@@ -40,6 +41,17 @@ class ConnectLifeAdapter extends utils.Adapter {
         try {
             await this.ensureChannel("info", "Information");
             await this.ensureChannel("devices", "Devices");
+            const build = getBuildInfo();
+            await this.setReadOnlyState("info.build", build.label, "Installed build", "string", "text");
+            await this.setReadOnlyState("info.buildCommit", build.commit, "Installed commit", "string", "text");
+            await this.setReadOnlyState(
+                "info.buildSource",
+                build.source,
+                "Build identification source",
+                "string",
+                "text",
+            );
+            this.log.info(`Build: ${build.label}`);
             await this.setStateAsync("info.connection", false, true);
             await this.setStateAsync("info.lastError", "", true);
             await this.setStateAsync("info.nextRetry", "", true);

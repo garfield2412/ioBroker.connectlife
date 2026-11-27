@@ -91,6 +91,14 @@ describe("Device profiles", () => {
 });
 
 describe("Profile integration with ioBroker", () => {
+    it("reports build identity even when no ConnectLife credentials are configured", async () => {
+        const adapter = adapterHarness();
+        await adapter.onReady();
+        assert.ok(adapter.states["info.build"].val.startsWith(`${require("./package.json").version} · `));
+        assert.equal(adapter.objects["info.buildCommit"].common.write, false);
+        assert.equal(adapter.objects["info.buildSource"].common.write, false);
+    });
+
     it("collects diagnostics only through the local button or explicit message, without device writes", async () => {
         const adapter = adapterHarness();
         let requests = 0;

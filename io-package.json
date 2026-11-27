@@ -273,6 +273,45 @@
         "name": "Devices"
       },
       "native": {}
+    },
+    {
+      "_id": "info.build",
+      "type": "state",
+      "common": {
+        "name": "Installed build",
+        "type": "string",
+        "role": "text",
+        "read": true,
+        "write": false,
+        "def": ""
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.buildCommit",
+      "type": "state",
+      "common": {
+        "name": "Installed commit",
+        "type": "string",
+        "role": "text",
+        "read": true,
+        "write": false,
+        "def": ""
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.buildSource",
+      "type": "state",
+      "common": {
+        "name": "Build identification source",
+        "type": "string",
+        "role": "text",
+        "read": true,
+        "write": false,
+        "def": ""
+      },
+      "native": {}
     }
   ]
 }
