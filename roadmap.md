@@ -14,6 +14,9 @@ Der ursprüngliche Neubauauftrag wurde durch Weiterentwicklung des Forks ersetzt
 - [ ] Entwicklungsstand nach Abstimmung auf dem ioBroker-Host erproben.
 - [ ] Türzustände, Ende, Abbruch und Wartung real beobachten.
 - [ ] Weitere Typ-/Featureprofile mit anonymisierten Daten ergänzen.
+- [x] Version 0.4.1 lokal: expliziter lesender Diagnoseabruf mit Anonymisierung, Cache und begrenzten Wiederholungen implementiert. Kein erneuter Push oder Rollout erfolgt.
+- [x] Version 0.4.1 geprüft: 28 Unit-Tests, 57 Paketprüfungen, Syntax, ESLint und ein lokaler Controller-Starttest erfolgreich; keine Cloud-Aufrufe in Tests.
+- [ ] Neue Metadatenabfragen nach Installation mit dem realen Gerät prüfen; Antworten zur Familienprofil-Erweiterung auswerten.
 - [ ] Gerätebezogene Aktualität und fehlende Geräte genauer behandeln.
 
 Steuerung benötigt separate Freigabe und belegte Sicherheitsbedingungen. TypeScript-Migration und Veröffentlichung sind getrennte Entscheidungen. Details: `docs/device-profiles.md`.

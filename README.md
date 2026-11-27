@@ -9,7 +9,7 @@
 
 [Deutsche Dokumentation](README_DE.md)
 
-Prepared fork version: **0.4.0**. Original project: [Andiweli/ioBroker.connectlife](https://github.com/Andiweli/ioBroker.connectlife).
+Prepared fork version: **0.4.1**. Original project: [Andiweli/ioBroker.connectlife](https://github.com/Andiweli/ioBroker.connectlife).
 
 Local development adds read-only dryer profiles alongside the existing climate integration.
 Type `030` / feature `1wk080218v0w` has observed operating state, program, time,
@@ -17,6 +17,11 @@ Cotton extra-dry option, drum light and error-code mappings. Other dryer feature
 retain raw data without guessed mappings. Dryer writes are blocked.
 `info.dataStale` marks failed or overdue account polls; offline devices may still have cached data.
 See the [German profile documentation](docs/device-profiles.md) for scope and limitations.
+
+Version 0.4.1 adds an explicit read-only diagnostic request through
+`devices.<id>.diagnostics.refresh`. Anonymized reports contain property descriptions,
+static data and self-check results. These requests never run as part of normal polling.
+See [diagnostic usage](docs/diagnostics.md).
 
 > [!NOTE]
 > Experimental, unofficial ioBroker adapter for the ConnectLife Cloud. It has been tested with Hisense air conditioners. Manufacturer information is available on the [Hisense website](https://global.hisense.com/).
@@ -110,6 +115,12 @@ Based in part on https://github.com/Bilan/connectlife-api-connector
 - Publication in the official ioBroker adapter repository
 
 ## Changelog
+
+### 0.4.1 (2026-11-27)
+
+- Added explicit diagnostic reads for property descriptions, static data and self-check reports.
+- Reused the existing session with bounded token/nonce retries, caching and rate-limit cooldown.
+- Added anonymized reports and per-query status without additional periodic cloud requests.
 
 ### 0.4.0 (2026-11-27)
 

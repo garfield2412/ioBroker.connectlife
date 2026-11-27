@@ -91,6 +91,41 @@ describe("Device profiles", () => {
 });
 
 describe("Profile integration with ioBroker", () => {
+    it("collects diagnostics only through the local button or explicit message, without device writes", async () => {
+        const adapter = adapterHarness();
+        let requests = 0;
+        let deviceWrites = 0;
+        adapter.client = { async setProperties() { deviceWrites++; } };
+        adapter.diagnosticsCollector = {
+            async collect(selected) {
+                requests++;
+                assert.equal(selected.puid, "synthetic-dryer");
+                return { ok: true, fetchedAt: "2026-11-27T12:00:00.000Z", queries: {} };
+            },
+        };
+        await adapter.processDevice(device({ machine_status: "3" }));
+        const prefix = "devices.synthetic-dryer.diagnostics";
+        assert.equal(requests, 0);
+        assert.equal(adapter.objects[`${prefix}.refresh`].common.write, true);
+        assert.equal(adapter.objects[`${prefix}.data`].common.write, false);
+        await adapter.onStateChange(`connectlife.0.${prefix}.refresh`, { val: true, ack: true });
+        assert.equal(requests, 0);
+        await adapter.onStateChange(`connectlife.0.${prefix}.refresh`, { val: true, ack: false });
+        assert.equal(requests, 1);
+        assert.equal(deviceWrites, 0);
+        assert.equal(adapter.states[`${prefix}.refresh`].val, false);
+        assert.equal(adapter.states[`${prefix}.busy`].val, false);
+        assert.equal(JSON.parse(adapter.states[`${prefix}.data`].val).ok, true);
+        let response;
+        adapter.sendTo = (from, command, result) => { response = result; };
+        await adapter.onMessage({ command: "collectDiagnostics", message: { deviceObjectId: "synthetic-dryer" }, from: "test", callback: {} });
+        assert.equal(requests, 2);
+        assert.equal(response.ok, true);
+        await adapter.onMessage({ command: "collectDiagnostics", message: { deviceObjectId: "arbitrary-device" }, from: "test", callback: {} });
+        assert.equal(requests, 2);
+        assert.equal(response.ok, false);
+    });
+
     it("keeps an unverified dryer raw-only without climate controls", async () => {
         const adapter = adapterHarness();
         await adapter.processDevice({ puid: "other-dryer", deviceTypeCode: "032", statusList: { machine_status: "2", t_power: "1" } });

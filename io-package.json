@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "connectlife",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "news": {
+      "0.4.1": {
+        "en": "Add explicit read-only cloud diagnostics with cached property lists, static data, self-check reports and anonymized output.",
+        "de": "Explizite lesende Cloud-Diagnose mit gecachten Eigenschaftslisten, statischen Daten, Selbstdiagnose und anonymisierter Ausgabe ergänzt.",
+        "ru": "Добавлена диагностика облака только для чтения с кэшированием свойств, статических данных, самодиагностики и анонимизацией.",
+        "pt": "Adicionado diagnóstico da nuvem só de leitura com cache de propriedades, dados estáticos, autodiagnóstico e saída anonimizada.",
+        "nl": "Expliciete alleen-lezen clouddiagnostiek met gecachte eigenschappen, statische gegevens, zelfdiagnose en geanonimiseerde uitvoer toegevoegd.",
+        "fr": "Ajout de diagnostics cloud explicites en lecture seule avec cache des propriétés, données statiques, autodiagnostic et sortie anonymisée.",
+        "it": "Aggiunta diagnostica cloud esplicita in sola lettura con cache delle proprietà, dati statici, autodiagnosi e output anonimizzato.",
+        "es": "Añadido diagnóstico explícito de nube de solo lectura con caché de propiedades, datos estáticos, autodiagnóstico y salida anonimizada.",
+        "pl": "Dodano diagnostykę chmury tylko do odczytu z pamięcią podręczną właściwości, danymi statycznymi, autodiagnostyką i anonimizacją.",
+        "uk": "Додано хмарну діагностику лише для читання з кешуванням властивостей, статичних даних, самодіагностики й анонімізацією.",
+        "zh-cn": "新增显式只读云诊断，支持缓存属性列表、静态数据、自检报告和匿名化输出。"
+      },
       "0.4.0": {
         "en": "Add read-only dryer profiles, observed program and time mappings, stale-data indication and consistent fork version metadata.",
         "de": "Lesbare Trocknerprofile, beobachtete Programm- und Zeitzuordnungen, Anzeige veralteter Daten und konsistente Fork-Versionsmetadaten ergänzt.",

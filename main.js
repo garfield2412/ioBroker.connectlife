@@ -4,6 +4,7 @@ const utils = require("@iobroker/adapter-core");
 const { ConnectLifeClient } = require("./lib/connectlife-client-v011");
 const { selectProfile, mapDryerStates } = require("./lib/device-profiles");
 const { createClimateStates } = require("./lib/climate-profile");
+const { DiagnosticsCollector } = require("./lib/diagnostics");
 
 const INITIAL_REFRESH_RETRY_MS = 5000;
 
@@ -26,6 +27,8 @@ class ConnectLifeAdapter extends utils.Adapter {
         this.unloading = false;
         this.freshnessTimer = null;
         this.readOnlyDeviceIds = new Set();
+        this.diagnosticDevices = new Map();
+        this.diagnosticsCollector = null;
 
         this.on("ready", this.onReady.bind(this));
         this.on("stateChange", this.onStateChange.bind(this));
@@ -55,8 +58,10 @@ class ConnectLifeAdapter extends utils.Adapter {
                 log: this.log,
                 scheduleTimeout: this.setTimeout.bind(this),
             });
+            this.diagnosticsCollector = new DiagnosticsCollector(this.client);
 
             this.subscribeStates("devices.*.controls.*");
+            this.subscribeStates("devices.*.diagnostics.refresh");
             if (this.config.allowRawWrites === true) {
                 this.subscribeStates("devices.*.raw.*");
             }
@@ -272,6 +277,21 @@ class ConnectLifeAdapter extends utils.Adapter {
             "string",
             "info.type",
         );
+        if (profile.category === "dryer") {
+            const firstSeen = !this.diagnosticDevices.has(objectId);
+            this.diagnosticDevices.set(objectId, {
+                puid,
+                deviceTypeCode: device.deviceTypeCode,
+                deviceFeatureCode: device.deviceFeatureCode,
+                deviceId: device.deviceId,
+                wifiId: device.wifiId,
+                deviceNickName,
+                roomName,
+            });
+            await this.ensureDiagnostics(objectId, firstSeen);
+        } else {
+            this.diagnosticDevices.delete(objectId);
+        }
 
         await this.setReadOnlyState(`devices.${objectId}.info.puid`, puid, "Device ID", "string", "info.serial");
         await this.setReadOnlyState(
@@ -363,6 +383,14 @@ class ConnectLifeAdapter extends utils.Adapter {
 
         try {
             const relativeId = id.slice(this.namespace.length + 1);
+            const parts = relativeId.split(".");
+            if (parts.length === 4 && parts[0] === "devices" && parts[2] === "diagnostics" && parts[3] === "refresh") {
+                if (state.val === true) {
+                    await this.setStateAsync(relativeId, false, true);
+                    await this.collectDiagnostics(parts[1]);
+                }
+                return;
+            }
             const object = await this.getObjectAsync(relativeId);
             const apiProperty = object?.native?.apiProperty;
             const deviceObjectId = object?.native?.deviceObjectId;
@@ -449,6 +477,14 @@ class ConnectLifeAdapter extends utils.Adapter {
             return;
         }
 
+        if (object.command === "collectDiagnostics") {
+            const result = await this.collectDiagnostics(object.message?.deviceObjectId);
+            if (object.callback) {
+                this.sendTo(object.from, object.command, result, object.callback);
+            }
+            return;
+        }
+
         if (object.command === "refresh") {
             await this.refreshDevices();
             if (object.callback) {
@@ -475,6 +511,62 @@ class ConnectLifeAdapter extends utils.Adapter {
                         object.callback,
                     );
                 }
+            }
+        }
+    }
+
+    async ensureDiagnostics(objectId, firstSeen) {
+        const prefix = `devices.${objectId}.diagnostics`;
+        await this.ensureChannel(prefix, "Read-only cloud diagnostics");
+        const definitions = [
+            ["refresh", "Fetch cloud descriptions (read only)", "boolean", "button", false],
+            ["busy", "Diagnostic request in progress", "boolean", "indicator", false],
+            ["data", "Anonymized diagnostic report", "string", "json", ""],
+            ["lastUpdate", "Diagnostic report timestamp", "string", "date", ""],
+            ["lastError", "Diagnostic request status", "string", "text", ""],
+        ];
+        for (const [id, name, type, role, defaultValue] of definitions) {
+            await this.extendObjectAsync(`${prefix}.${id}`, {
+                type: "state",
+                common: { name, type, role, read: true, write: id === "refresh", def: defaultValue },
+                native: {},
+            });
+        }
+        if (firstSeen) {
+            await this.setStateAsync(`${prefix}.busy`, false, true);
+            await this.setStateAsync(`${prefix}.refresh`, false, true);
+        }
+    }
+
+    async collectDiagnostics(objectId) {
+        const device = this.diagnosticDevices.get(objectId);
+        if (!device || !this.diagnosticsCollector || this.unloading) {
+            return { ok: false, error: "Device diagnostics unavailable" };
+        }
+        const prefix = `devices.${objectId}.diagnostics`;
+        try {
+            await this.setStateAsync(`${prefix}.busy`, true, true);
+            const report = await this.diagnosticsCollector.collect(device);
+            if (!this.unloading) {
+                await this.setStateAsync(`${prefix}.data`, JSON.stringify(report), true);
+                if (report.fetchedAt) {
+                    await this.setStateAsync(`${prefix}.lastUpdate`, report.fetchedAt, true);
+                }
+                await this.setStateAsync(
+                    `${prefix}.lastError`,
+                    report.ok ? "" : "Diagnostic report incomplete; see query status",
+                    true,
+                );
+            }
+            return report;
+        } catch {
+            if (!this.unloading) {
+                await this.setStateAsync(`${prefix}.lastError`, "Diagnostic request failed", true);
+            }
+            return { ok: false, error: "Diagnostic request failed" };
+        } finally {
+            if (!this.unloading) {
+                await this.setStateAsync(`${prefix}.busy`, false, true);
             }
         }
     }
@@ -614,6 +706,7 @@ class ConnectLifeAdapter extends utils.Adapter {
         this.unloading = true;
 
         try {
+            this.diagnosticsCollector?.close();
             if (this.freshnessTimer) {
                 this.clearTimeout(this.freshnessTimer);
                 this.freshnessTimer = null;

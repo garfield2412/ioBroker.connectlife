@@ -4,7 +4,7 @@
 
 [English documentation](README.md)
 
-Vorbereitete Fork-Version: **0.4.0**. Ursprungsprojekt: [Andiweli/ioBroker.connectlife](https://github.com/Andiweli/ioBroker.connectlife).
+Vorbereitete Fork-Version: **0.4.1**. Ursprungsprojekt: [Andiweli/ioBroker.connectlife](https://github.com/Andiweli/ioBroker.connectlife).
 
 Eine GitHub-Installation allein bietet keine automatische Suche nach neuen Fork-Versionen.
 Für reguläre Update-Angebote im Admin ist ein aktiver Repository-Katalog mit einer passenden
@@ -23,6 +23,11 @@ lesbaren Werte unter `status`. Trocknersteuerung und Raw-Schreiben für Trockner
 `info.dataStale` kennzeichnet fehlgeschlagene oder zu lange zurückliegende Kontoabrufe.
 Ein erfolgreicher Abruf garantiert keine neue Messung eines offline gemeldeten Geräts.
 Details und Erweiterung weiterer Profile: [Geräteprofile](docs/device-profiles.md).
+
+Ab 0.4.1 kann unter `devices.<id>.diagnostics.refresh` gezielt eine lesende Cloud-Diagnose
+ausgelöst werden. Die anonymisierte Ausgabe steht unter `diagnostics.data`. Dabei werden
+Eigenschaftsliste, statische Daten und Selbstdiagnose abgefragt; keine Gerätebefehle gesendet.
+Der normale Pollingzyklus ruft diese Daten nicht ab. [Bedienung und Grenzen](docs/diagnostics.md).
 
 > [!NOTE]
 > Experimenteller, inoffizieller ioBroker-Adapter für die ConnectLife-Cloud. Getestet wurde er mit Hisense-Klimageräten.
@@ -108,6 +113,12 @@ Basiert auf Teilen von https://github.com/Bilan/connectlife-api-connector
 - Veröffentlichung im offiziellen ioBroker-Adapter-Repository
 
 ## Changelog
+
+### 0.4.1 (2026-11-27)
+
+- Manuellen Diagnoseabruf für Eigenschaftslisten, Gerätemetadaten und Selbstdiagnose ergänzt.
+- Bestehende Sitzung, begrenzte Token-/Nonce-Wiederholungen, Cache und Rate-Limit-Pause verwendet.
+- Anonymisierte Berichte und Einzelstatus je Abfrage bereitgestellt; keine zusätzlichen regelmäßigen Cloud-Abfragen.
 
 ### 0.4.0 (2026-11-27)
 

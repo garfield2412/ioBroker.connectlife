@@ -2,7 +2,7 @@
 
 ## Vorbereiteter Stand
 
-Version **0.4.0**, Changelogdatum **27.11.2026**. Sie ersetzt 0.3.1 im Entwicklungsbranch und enthält die lesende Trocknererweiterung. `package.json`, `io-package.json`, Root-Einträge im Lockfile, beide README-Changelogs und `common.news` stimmen überein. Commit und Push des Entwicklungsbranches sind beauftragt. Ein Push dieses Branches aktualisiert weder main noch die Installation auf dem Raspberry Pi; Tags und Veröffentlichungen sind nicht beauftragt.
+Version **0.4.1**, Changelogdatum **27.11.2026**, ist der neue lokale Entwicklungsstand mit expliziter lesender Metadatendiagnose. Der zuvor gepushte und auf dem Host installierte Stand ist 0.4.0. `package.json`, `io-package.json`, Root-Einträge im Lockfile, beide README-Changelogs und `common.news` stimmen überein. Die neue Version wurde noch nicht erneut gepusht oder installiert. Ein späterer Push des Entwicklungsbranches aktualisiert weder main noch die Installation auf dem Raspberry Pi; Tags und Veröffentlichungen sind nicht beauftragt.
 
 Neue Funktionen erhöhen die Minor-Version, reine Fehlerkorrekturen die Patch-Version. Nach der Veröffentlichung einer Version werden weitere Änderungen unter einer neuen Nummer geführt; ein neuer Commit mit identischer Version ist kein erkennbarer Versionssprung.
 
@@ -33,7 +33,7 @@ Für den aktuellen Entwicklungsbranch kann die explizite Archiv-URL verwendet we
 https://github.com/garfield2412/ioBroker.connectlife/archive/refs/heads/development/dryer-support.tar.gz
 ```
 
-5. Nach der Installation muss die installierte Version 0.4.0 sein. Konfiguration und Instanz müssen für ein Update nicht gelöscht werden. Eine Neuinstallation derselben URL ist weiterhin manuell; es wird keine automatische Fork-Updateanzeige zugesichert.
+5. Nach Veröffentlichung und Installation dieses Stands muss die installierte Version 0.4.1 sein. Konfiguration und Instanz müssen für ein Update nicht gelöscht werden. Eine Neuinstallation derselben URL ist weiterhin manuell; es wird keine automatische Fork-Updateanzeige zugesichert.
 
 ## Release-Workflow
 
