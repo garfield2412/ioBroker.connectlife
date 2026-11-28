@@ -44,6 +44,26 @@ function adapterHarness() {
 }
 
 describe("Device profiles", () => {
+    it("keeps the reference door mapping separate from operating state and treats unavailable codes as unknown", () => {
+        for (const [input, expected] of [[1, true], ["2", false], [0, null], ["3", null], [null, null]]) {
+            const states = mapped({ Door_status: input, machine_status: "3" });
+            assert.equal(states.doorOpen.value, expected);
+            assert.equal(states.doorOpen.evidence, "reference");
+            assert.equal(states.paused.value, true);
+        }
+        assert.equal(mapped({}).doorOpen, undefined);
+    });
+    it("maps cloud-confirmed maintenance indications without treating unknown values as clear", () => {
+        for (const [input, expected] of [["0", false], [1, true], ["2", null], [null, null], [true, null]]) {
+            const states = mapped({ Waterbox_Full: input, Clean_Filter: input });
+            assert.equal(states.waterTankFull.value, expected);
+            assert.equal(states.cleanFilter.value, expected);
+        }
+        assert.equal(mapped({}).waterTankFull, undefined);
+        assert.equal(mapped({}).cleanFilter, undefined);
+        const profile = selectProfile({ deviceTypeCode: "032" });
+        assert.deepEqual(mapDryerStates(profile, { Waterbox_Full: 1, Clean_Filter: 1 }), []);
+    });
     it("keeps other dryer families and unknown features generic, even with climate-like properties", () => {
         for (const type of ["004", "030", "032"]) {
             const profile = selectProfile({ deviceTypeCode: type, deviceFeatureCode: "unknown", statusList: { t_power: 1 } });
@@ -147,17 +167,24 @@ describe("Profile integration with ioBroker", () => {
         const adapter = adapterHarness();
         let writes = 0;
         adapter.client = { async setProperties() { writes++; } };
-        await adapter.processDevice(device({ machine_status: "2", Selected_program_ID: "8", Selected_program_remaining_time_in_minutes: "207" }));
+        await adapter.processDevice(device({ machine_status: "2", Selected_program_ID: "8", Selected_program_remaining_time_in_minutes: "207", Door_status: "2", Waterbox_Full: "0", Clean_Filter: "1" }));
         const prefix = "devices.synthetic-dryer";
         assert.equal(adapter.states[`${prefix}.status.operation`].val, "running");
         assert.equal(adapter.states[`${prefix}.status.operation`].ack, true);
         assert.equal(adapter.objects[`${prefix}.status.operation`].common.write, false);
         assert.equal(adapter.objects[`${prefix}.raw.machine_status`].common.write, false);
+        assert.equal(adapter.states[`${prefix}.status.doorOpen`].val, false);
+        assert.equal(adapter.objects[`${prefix}.status.doorOpen`].native.evidence, "reference");
+        assert.equal(adapter.objects[`${prefix}.status.doorOpen`].common.write, false);
+        assert.equal(adapter.states[`${prefix}.status.cleanFilter`].val, true);
         await adapter.onStateChange(`connectlife.0.${prefix}.raw.machine_status`, { val: 1, ack: false });
         assert.equal(writes, 0);
         await adapter.processDevice(device({ machine_status: "3" }));
         assert.equal(adapter.states[`${prefix}.status.remainingTime`].val, null);
         assert.equal(adapter.states[`${prefix}.status.remainingTime`].q, 1);
+        assert.equal(adapter.states[`${prefix}.status.doorOpen`].val, null);
+        assert.equal(adapter.states[`${prefix}.status.doorOpen`].q, 1);
+        assert.equal(adapter.states[`${prefix}.status.cleanFilter`].val, null);
     });
 
     it("leaves climate control IDs, conversions and raw-write configuration intact", async () => {

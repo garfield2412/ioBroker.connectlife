@@ -1,6 +1,6 @@
 # Lesende Cloud-Diagnose
 
-Diagnosefunktion mit Basisversion 0.4.1, auf dem Entwicklungsbranch bereitgestellt. Die nachfolgende Build-Anzeige ist noch eine lokale Erweiterung. Keine Gerätebefehle oder Push-Registrierungen. Die Funktion läuft nur nach ausdrücklicher Auslösung.
+Diagnosefunktion mit Basisversion 0.4.1, auf dem Entwicklungsbranch bereitgestellt. Die Build-Anzeige ist installiert und auf dem Host bestätigt. Keine Gerätebefehle oder Push-Registrierungen. Die Funktion läuft nur nach ausdrücklicher Auslösung.
 
 ## Auslösen und auslesen
 
@@ -26,7 +26,7 @@ sendTo('connectlife.0', 'collectDiagnostics', {
 });
 ```
 
-Nur die ID eines bereits vom Adapter erkannten Trockners ist zulässig. Keine beliebigen URLs, Endpunkte oder Cloud-Gerätekennungen als Parameter. Nach dieser lokalen Änderung muss der neue Adapterstand zunächst installiert werden; die auf dem Host vorhandene 0.4.0 besitzt den Button noch nicht.
+Nur die ID eines bereits vom Adapter erkannten Trockners ist zulässig. Keine beliebigen URLs, Endpunkte oder Cloud-Gerätekennungen als Parameter. Der installierte Build 493a828 besitzt diesen Button.
 
 ## Abfragen
 
@@ -35,8 +35,9 @@ Die unabhängige Klasse `lib/metadata-client.js` benutzt den bestehenden API-Cli
 - GET `/clife-svc/get_property_list` mit Typ-/Feature-Code.
 - POST `/clife-svc/pu/query_static_data` mit Gerätekennung.
 - POST `/basic/self_check/info` mit Gerätekennung und `noRecord=1`.
+- POST `/clife-svc/pu/query_system_data` mit Gerätekennung (lokal ergänzt, noch kein Realnachweis).
 
-Beide POST-Operationen sind laut Referenz Leseabfragen; `/device/pu/property/set` wird nie verwendet. System-/Programmdaten und Energiestatistik sind noch nicht Bestandteil dieses ersten Diagnoseabrufs.
+Die POST-Operationen sind laut Referenz Leseabfragen; `/device/pu/property/set` wird nie verwendet. Systemdaten werden als vierte Abfrage nach der Selbstdiagnose ergänzt. Der Python-Client dokumentiert Programmdaten für Geschirrspüler; ob der Trockner ebenfalls nutzbare Daten liefert, ist offen. Leere Daten sind kein Nachweis fehlender Programme. Energiestatistik ist weiterhin nicht Bestandteil des Diagnoseabrufs.
 
 Die Abfragen laufen nacheinander. Ein abgewiesenes Token wird höchstens einmal erneuert, eine Nonce höchstens einmal ersetzt. Keine rekursiven Wiederholungen. Transport-, Authentifizierungs- und Berechtigungsfehler stoppen weitere Abfragen. HTTP 429 oder API-Code 403048 lösen eine instanzweite Diagnosepause aus, mindestens 60 Sekunden beziehungsweise entsprechend Retry-After; keine automatische Wiederholung nach deren Ablauf. Normales Statuspolling wird durch diesen Diagnosecache nicht verändert.
 
@@ -54,6 +55,16 @@ Ein erfolgreicher HTTP-Aufruf liefert noch keine vollständig geprüfte Beschrei
 
 ## Tests und Realnachweis
 
-Synthetische Tests prüfen Endpunkte, Signierung, Wiederholungsgrenzen, Rate-Limit-Behandlung, Teilfehler, Anonymisierung, Cache, parallele Anforderungen und den lokalen ioBroker-Button. Keine persönlichen Fixtures und keine Cloud-Aufrufe in Tests. Ein Realabruf der neuen Metadaten ist erst nach Installation dieses Entwicklungsstands möglich und noch nicht erfolgt.
+Synthetische Tests prüfen Endpunkte, Signierung, Wiederholungsgrenzen, Rate-Limit-Behandlung, Teilfehler, Anonymisierung, Cache, parallele Anforderungen und den lokalen ioBroker-Button. Keine persönlichen Fixtures und keine Cloud-Aufrufe in Tests. Der erste Realabruf ist erfolgt; Ergebnisse stehen im folgenden Abschnitt Realprüfung.
 
 Prüfergebnis am 27.11.2026 unter Windows / Node 26.13.1: 28 Unit-Tests, 57 Paketprüfungen, Syntaxprüfungen und ESLint erfolgreich. Der lokale Starttest mit js-controller 8.0.0-alpha.27-20261126-6d87adfc0 bestand ebenfalls, einschließlich sauberem Beenden. Der Starttest verwendet keine Zugangsdaten und bestätigt keine reale Cloud-Unterstützung der Metadatenendpunkte.
+
+## Realprüfung am 27.11.2026
+
+Installierter Build `0.4.1 · 493a828` aus npm-lock bestätigt. Ein expliziter Diagnoseabruf um 11:49:55 UTC war für alle drei Endpunkte erfolgreich. Zuvor trat beim normalen Statuspolling ein DNS-Fehler EAI_AGAIN auf; dataStale war korrekt true. Kein Neustart und keine Gerätebefehle ausgeführt.
+
+Für Typ 030 / Feature 1wk080218v0w: Propertyliste leer (`properties: []`), statische Nutzdaten `data: null`. Die Selbstdiagnose liefert eine Regeltabelle mit 29 Einträgen und eine leere `selfCheckFailedList`. Die Regeltabelle ist kein Verzeichnis aktuell aktiver Fehler. Inhalte kamen auf Polnisch; keine deutschen Übersetzungen aus diesen Freitexten abgeleitet.
+
+Zwei direkt nutzbare Regeln: `Waterbox_Full=1` mit contentKey `selfcheck_dryer_content_water_storage_box`; `Clean_Filter=1` mit contentKey `selfcheck_dryer_content_filter_status`. Beide Metaregeln nennen ebenfalls denselben statusKey/statusValue und statusOperator 0. Aktuelle Raw-Werte waren jeweils 0. Daraus werden ausschließlich im geprüften Featureprofil die lesbaren Hinweise `waterTankFull` und `cleanFilter` ergänzt: 1 aktiv, 0 nicht gesetzt, andere/ungültige Werte unbekannt (null). Kein Nachweis der physischen Auslösung; Warnungen nicht durch absichtliches Füllen oder Verschmutzen testen. Andere Gerätefamilien bleiben unverändert.
+
+Türstatus, Programmende und weitere Programme sind durch diese Antworten nicht geklärt. Fehlertexte können später unabhängig aus den Metadaten abgeleitet werden; die bloße Existenz einer Regel belegt keinen aktuellen Fehler. Keine vollständigen Geräteberichte oder personenbezogenen Fixtures im Repository gespeichert.

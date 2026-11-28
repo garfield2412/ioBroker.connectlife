@@ -23,6 +23,8 @@ Unbekannte Typcodes werden nicht allein wegen ähnlich benannter Properties als 
 | remainingTime / totalTime | number, min | gemeldete Restzeit / gewählte Gesamtdauer |
 | dryingOption | string | nur Baumwolle und dry_time=3: extraDry; sonst unknown |
 | drumLight | boolean | beobachtetes Trommellicht |
+| doorOpen | boolean | Referenzbefund für 030: 1 offen, 2 geschlossen; 0/andere Codes null; lokal noch nicht physisch bestätigt |
+| waterTankFull / cleanFilter | boolean | Cloud-Selbstdiagnoseregeln: 1 Hinweis aktiv, 0 nicht gesetzt, sonst null |
 | errorCode | string | Originalcode ohne erfundene Fehlerbeschreibung |
 
 Alle Zustände sind lesbar. Fehlende Quellen erzeugen keine neuen Datenpunkte; vorhandene Profilzustände werden dann null mit Qualitätscode 1, auch nach Neustart. Ungültige Zahlen und Minutenwerte ab 65535 werden ebenfalls null. Raw-Daten bleiben unverändert verfügbar.
@@ -52,4 +54,8 @@ Am 27.11.2026 unter Windows mit Node 26.13.1 geprüft:
 
 Entwicklungsabhängigkeiten wurden mit aktivierter Zertifikatsprüfung über den Windows-Zertifikatsspeicher installiert (`NODE_USE_SYSTEM_CA=1`); das Lockfile hält die Auflösung fest. Für weitere Installation und Tests kann derselbe Umgebungsparameter nötig sein. Keine Änderung der globalen npm-Konfiguration.
 
-Noch nicht auf dem Raspberry Pi installiert. Der lokale Starttest ersetzt keinen Test der neuen Profilzustände auf dem echten Host und keine Prüfung weiterer Node-/Controller-Versionen. Commit und Push des Entwicklungsbranches wurden anschließend ausdrücklich beauftragt.
+Build 493a828 ist auf dem Raspberry Pi installiert und bestätigt. Die danach lokal ergänzten Wartungs- und Türzustände sind dort noch nicht installiert. Der lokale Starttest ersetzt keine Prüfung weiterer Node-/Controller-Versionen.
+
+Der Türzustand verwendet zwei einzelne Protokollbefunde aus `connectlife-ha` Commit `37cb0b020818d83d5eb723d1e9bce99ef8bdc1cb`, Datei `custom_components/connectlife/mappings/030.yaml`, Property `Door_status`; die Featuredatei `030-1wk080066v0w.yaml` dokumentiert die Fremdvalidierung. Es wurde keine Mapping-Datei übernommen. Das Objekt trägt `native.evidence=reference` und eine Quellenkennung. Keine Ableitung von läuft, fertig oder einer Startfreigabe aus der Türstellung. Die Umsetzung bleibt zunächst auf unser bestehendes Featureprofil begrenzt.
+
+Aktuelle lokale Erweiterung nach Realdiagnose: waterTankFull (Waterbox_Full) und cleanFilter (Clean_Filter), boolean, rein lesend, nur im geprüften Featureprofil. 1 aktiv, 0 nicht gesetzt, sonst null. Quelle und Grenzen: docs/diagnostics.md, Realprüfung am 27.11.2026.

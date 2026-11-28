@@ -1,24 +1,32 @@
 # Roadmap: Weiterentwicklung des ConnectLife-Forks
 
-Der ursprüngliche Neubauauftrag wurde durch Weiterentwicklung des Forks ersetzt. origin: garfield2412/ioBroker.connectlife; upstream: Andiweli/ioBroker.connectlife. Commit und Push des Entwicklungsbranches wurden am 27.11.2026 ausdrücklich beauftragt. Keine Veröffentlichung oder Änderung von main beauftragt.
+Stand: 27.11.2026. Weiterentwicklung des vorhandenen JavaScript-Forks; keine vollständige Neuentwicklung. origin: garfield2412/ioBroker.connectlife; upstream: Andiweli/ioBroker.connectlife. Arbeitsbranch: development/dryer-support. Basisversion bleibt 0.4.1 mit separater Build-Kennung.
 
-- [x] Kontoweite Geräteerkennung geprüft.
-- [x] Typ 030 / Feature 1wk080218v0w real beobachtet: Standby, Eco/Baumwolle, Extra trocken, Lauf und Pause.
-- [x] Profile für Klima, Trockner und generischen Fallback implementiert.
-- [x] Lesbare Trocknerzustände ohne Gerätebefehle ergänzt.
-- [x] Behandlung unbekannter Codes und fehlender Eigenschaften implementiert.
-- [x] Kontoabrufe mit info.dataStale kennzeichnen.
-- [x] Syntax, 15 Unit-Tests, 57 Paketprüfungen und ESLint erfolgreich (Windows, Node 26.13.1).
-- [x] Lokaler Controller-Integrationstest bestanden: Start und sauberes Beenden, ohne Zugangsdaten oder Cloud-Aufrufe.
-- [x] Version 0.4.0 in Manifesten, Lockfile und README-Changelogs vorbereitet; Fork-Metadaten und Updateweg dokumentiert. Kein automatisches Updateangebot für reine GitHub-Installationen zugesichert.
-- [ ] Entwicklungsstand nach Abstimmung auf dem ioBroker-Host erproben.
-- [ ] Türzustände, Ende, Abbruch und Wartung real beobachten.
-- [ ] Weitere Typ-/Featureprofile mit anonymisierten Daten ergänzen.
-- [x] Version 0.4.1: expliziter lesender Diagnoseabruf mit Anonymisierung, Cache und begrenzten Wiederholungen implementiert und auf den Entwicklungsbranch gepusht.
-- [x] Version 0.4.1 geprüft: 28 Unit-Tests, 57 Paketprüfungen, Syntax, ESLint und ein lokaler Controller-Starttest erfolgreich; keine Cloud-Aufrufe in Tests.
-- [ ] Neue Metadatenabfragen nach Installation mit dem realen Gerät prüfen; Antworten zur Familienprofil-Erweiterung auswerten.
-- [x] Basisversion auf Benutzerwunsch bei 0.4.1 belassen; getrennte Build-Kennung aus lokalem Git oder tatsächlichen Installationsmetadaten implementiert.
-- [x] Build-Anzeige lokal geprüft: 34 Unit-Tests, 57 Paketprüfungen, Syntax, ESLint und Controller-Starttest erfolgreich; lesende Gegenprobe auf dem Host ebenfalls erfolgreich. Noch nicht gepusht oder installiert.
-- [ ] Gerätebezogene Aktualität und fehlende Geräte genauer behandeln.
+## Installiert und real geprüft
 
-Steuerung benötigt separate Freigabe und belegte Sicherheitsbedingungen. TypeScript-Migration und Veröffentlichung sind getrennte Entscheidungen. Details: `docs/device-profiles.md`.
+- [x] Build 493a828 auf dem ioBroker-Host bestätigt (Quelle npm-lock).
+- [x] Geräteerkennung und beobachtetes Profil 030 / 1wk080218v0w: Standby, Lauf, Pause, Eco/Baumwolle, Extra trocken, Rest-/Gesamtdauer.
+- [x] Klimaprofil erhalten; andere Trocknertypen und unbekannte Geräte erhalten Raw-Fallback ohne Schreibfreigabe.
+- [x] Kontoaktualität mit info.dataStale und begrenztem Login-Backoff.
+- [x] Expliziter lesender Diagnoseabruf: Propertyliste leer, statische Nutzdaten null, Selbstdiagnoseregeln erfolgreich empfangen. Keine aktiven Fehler in der zurückgegebenen Fehlerliste.
+
+## Lokal umgesetzt, noch nicht gepusht oder installiert
+
+- [x] waterTankFull und cleanFilter aus real empfangenen Selbstdiagnoseregeln für das geprüfte Feature.
+- [x] doorOpen aus einem einzelnen referenzierten 030-Protokollbefund; Referenzevidenz im Objekt gekennzeichnet. Eigene physische Bestätigung fehlt.
+- [x] Vierte manuelle Diagnoseabfrage systemData (query_system_data) nach dem Python-Protokoll ergänzt; bestehende Anonymisierung, Cache, Abbruch und Rate-Limit-Grenzen bleiben wirksam.
+- [x] Dokumentation und synthetische Tests für Türzustand, Wartung, Systemdaten und Teilfehler ergänzt.
+
+## Nächste Schritte in Reihenfolge
+
+1. Nach gesondertem Commit-/Pushauftrag und Installation die erweiterte Diagnose einmal auslösen. Systemdaten auf Programme/Optionen prüfen; Antwortschema und Unterstützung ausdrücklich dokumentieren. Eine leere Antwort nicht durch vermutete Tabellen ersetzen.
+2. Tür offen/geschlossen bei normaler Nutzung durch den Benutzer bestätigen; Programmende, Abbruch und Zeitprogramm gezielt beobachten. Keine Gerätebefehle autonom senden.
+3. Fehlerbeschreibungen aus den tatsächlich gelieferten Selbstdiagnose-Metadaten ableiten. Regeltabelle und aktuell aktive Fehler auseinanderhalten; unbekannte Codes erhalten und Sprache der Herstellertexte offenlegen.
+4. Gerätebezogene Aktualität und verschwundene Geräte behandeln. Ein erfolgreicher Kontoabruf belegt keine neuen Sensordaten. Keine falsche Ende-/Aus-Erkennung aus fehlenden Daten.
+5. Wiederverwendbare Familienprofile mit Feature-Overrides aus belegten Eigenschaften entwickeln. Weitere 030-Features sowie 004/032 separat anhand anonymisierter Diagnosen prüfen. Keine pauschale Übertragung von 030-Codes.
+6. Energiehistorie erst nach Prüfung von Unterstützung, Zeitraum, Einheit und Zählerverhalten. Raw-Energie und Nullen aus fremden Endpunkten nicht als gemessenen Verbrauch ausgeben.
+7. Steuerung bleibt eine gesonderte Entscheidung mit ausdrücklicher Freigabe und belegten modellabhängigen Bedingungen. Gleiches gilt für Veröffentlichung und TypeScript-Migration.
+
+## Prüfstand
+
+Build 493a828: 34 Unit-Tests, 57 Paketprüfungen, Syntax, ESLint und Controller-Starttest bestanden. Reale Cloud-Diagnose danach erfolgreich. Aktuelle lokale Fortsetzung: 37 Unit-Tests, 57 Paketprüfungen, Syntax und ESLint erfolgreich. Keine erneute Cloud-Abfrage oder Host-Installation für die lokale Systemdaten-Erweiterung. Quellen und Evidenzgrenzen: docs/reference-reuse.md, docs/diagnostics.md, docs/device-profiles.md.

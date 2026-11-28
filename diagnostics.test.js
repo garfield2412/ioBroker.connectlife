@@ -23,19 +23,23 @@ function fixture() {
 }
 
 describe("Read-only metadata client", () => {
-    it("uses only the three observed read endpoints and the existing token/signature", async () => {
+    it("uses only the four referenced read endpoints and the existing token/signature", async () => {
         const f = fixture();
         const api = new MetadataClient(f.client);
-        for (const name of ["properties", "staticData", "selfCheck"]) await api.query(name, device);
+        for (const name of ["properties", "staticData", "selfCheck", "systemData"]) await api.query(name, device);
         assert.deepEqual(f.calls.map(call => [call.method, new URL(call.url).pathname]), [
             ["GET", "/clife-svc/get_property_list"], ["POST", "/clife-svc/pu/query_static_data"], ["POST", "/basic/self_check/info"],
+            ["POST", "/clife-svc/pu/query_system_data"],
         ]);
         assert.equal(f.calls[0].data.deviceFeatureCode, device.deviceFeatureCode);
         assert.equal(f.calls[0].data.puid, undefined);
         assert.equal(f.calls[1].data.puid, device.puid);
         assert.equal(f.calls[2].data.noRecord, "1");
+        assert.equal(f.calls[3].data.puid, device.puid);
+        assert.equal(f.calls[3].data.noRecord, undefined);
+        assert.equal(f.calls[3].data.properties, undefined);
         assert.ok(f.calls.every(call => call.data.sign === "synthetic-signature"));
-        assert.deepEqual(f.auth, [false, false, false]);
+        assert.deepEqual(f.auth, [false, false, false, false]);
     });
 
     it("renews a rejected token once and rebuilds the nonce before retrying", async () => {
@@ -117,6 +121,27 @@ describe("Diagnostic anonymization", () => {
 });
 
 describe("Explicit diagnostic collection", () => {
+    it("sanitizes system descriptions and keeps their failure independent of the completed self-check", async () => {
+        const f = fixture();
+        f.respond(async () => ({ data: { response: { resultCode: 0, puid: device.puid, data: [{
+            programId: 77, duration: 90, account: "private-account", label: device.roomName,
+        }] } } }));
+        const report = await new DiagnosticsCollector(f.client).collect(device);
+        assert.equal(report.queries.systemData.status, "ok");
+        assert.equal(report.queries.systemData.data.data[0].programId, 77);
+        assert.equal(report.queries.systemData.data.data[0].account, "[redacted]");
+        assert.ok(!JSON.stringify(report).includes(device.puid));
+        assert.ok(!JSON.stringify(report).includes(device.roomName));
+        const unsupported = fixture();
+        unsupported.respond(async () => {
+            if (unsupported.calls.length === 4) throw { response: { status: 404 } };
+            return { data: { response: { resultCode: 0, data: null } } };
+        });
+        const partial = await new DiagnosticsCollector(unsupported.client).collect(device);
+        assert.equal(partial.ok, false);
+        assert.equal(partial.queries.selfCheck.status, "ok");
+        assert.equal(partial.queries.systemData.status, "unsupported");
+    });
     it("makes no requests until triggered, coalesces callers and caches only anonymized results", async () => {
         const f = fixture();
         let now = 1000000;
@@ -124,16 +149,16 @@ describe("Explicit diagnostic collection", () => {
         assert.equal(f.calls.length, 0);
         f.respond(async () => ({ data: { response: { resultCode: 0, data: { token: "secret-response", label: device.roomName, propertyKey: "machine_status" } } } }));
         const [first, second] = await Promise.all([collector.collect(device), collector.collect(device)]);
-        assert.equal(f.calls.length, 3);
+        assert.equal(f.calls.length, 4);
         assert.equal(first.ok, true);
         assert.equal(second.ok, true);
         assert.ok(!JSON.stringify(first).includes("secret-response"));
         assert.ok(!JSON.stringify(first).includes(device.roomName));
         assert.equal((await collector.collect(device)).cached, true);
-        assert.equal(f.calls.length, 3);
+        assert.equal(f.calls.length, 4);
         now += 300001;
         await collector.collect(device);
-        assert.equal(f.calls.length, 6);
+        assert.equal(f.calls.length, 8);
     });
 
     it("keeps unsupported queries separate and still collects the other descriptions", async () => {
@@ -146,7 +171,8 @@ describe("Explicit diagnostic collection", () => {
         assert.equal(report.ok, false);
         assert.equal(report.queries.properties.status, "unsupported");
         assert.equal(report.queries.staticData.status, "ok");
-        assert.equal(f.calls.length, 3);
+        assert.equal(report.queries.systemData.status, "ok");
+        assert.equal(f.calls.length, 4);
     });
 
     it("stops after a rate limit and applies a shared cooldown to other devices", async () => {
@@ -156,6 +182,7 @@ describe("Explicit diagnostic collection", () => {
         const report = await collector.collect(device);
         assert.equal(report.queries.properties.status, "rateLimited");
         assert.equal(report.queries.staticData.status, "skipped");
+        assert.equal(report.queries.systemData.status, "skipped");
         assert.equal((await collector.collect({ ...device, puid: "other-synthetic" })).error, "rateLimited");
         assert.equal(f.calls.length, 1);
     });

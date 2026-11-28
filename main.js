@@ -619,7 +619,11 @@ class ConnectLifeAdapter extends utils.Adapter {
                     ...(definition.unit ? { unit: definition.unit } : {}),
                     ...(definition.min !== undefined ? { min: definition.min } : {}),
                 },
-                native: { sourceProperty: definition.property, profileState: true },
+                native: {
+                    sourceProperty: definition.property,
+                    profileState: true,
+                    ...(definition.evidence ? { evidence: definition.evidence, reference: definition.reference } : {}),
+                },
             });
             await this.setStateAsync(id, { val: definition.value, ack: true, q: definition.value === null ? 1 : 0 });
         }
